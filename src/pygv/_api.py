@@ -47,7 +47,6 @@ def track(targ: TrackArgument | None = None, /, **kwargs) -> Track:  # noqa: ANN
         url = kwargs["url"]
     elif isinstance(targ, (str, pathlib.Path)):
         url = kwargs["url"] = str(targ)
-        kwargs["indexURL"] = None
     else:
         url = kwargs["url"] = str(targ[0])
         kwargs["indexURL"] = str(targ[1])
@@ -71,13 +70,13 @@ def browse(*tracks: TrackArgument) -> Browser:
     Browser
         The browser widget.
     """
-    _CONTEXT.current = Browser(
-        Config(
-            genome=_CONTEXT.genome,
-            locus=_CONTEXT.locus,
-            tracks=[track(t) for t in tracks],
-        ),
+    config = Config(
+        genome=_CONTEXT.genome,
+        tracks=[track(t) for t in tracks],
     )
+    if _CONTEXT.locus:
+        config.locus = _CONTEXT.locus
+    _CONTEXT.current = Browser(config)
     return _CONTEXT.current
 
 

@@ -1,6 +1,7 @@
 # pygv
 
-a minimal, scriptable genome browser for python built with [anywidget](https://github.com/manzt/anywidget)
+a minimal, scriptable genome browser for python built with
+[anywidget](https://github.com/manzt/anywidget)
 
 ## installation
 
@@ -27,9 +28,9 @@ pygv.browse("fragments.bed", "10x_cov.bw")
 
 ![igv.js in Jupyter Notebook](https://github.com/manzt/anywidget/assets/24403730/8aa77384-6d7c-422f-9238-37e06a0272f6)
 
-That's it. By default, `pygv` infers the track and data-types by file
-extension. If a file format has an index file, it must be specified as 
-a tuple (remote URLs also work):
+That's it. By default, `pygv` infers the track and data-types by file extension.
+If a file format has an index file, it must be specified as a tuple (remote URLs
+also work):
 
 ```py
 pygv.browse(
