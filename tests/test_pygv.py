@@ -4,6 +4,7 @@ import pathlib
 import pytest
 from inline_snapshot import snapshot
 
+import pygv
 from pygv import Config
 from pygv._api import load
 from pygv._tracks import (
@@ -11,6 +12,7 @@ from pygv._tracks import (
     AnnotationTrack,
     MergedTrack,
     SegmentedCopyNumberTrack,
+    VariantTrack,
     WigTrack,
 )
 
@@ -55,17 +57,19 @@ def test_loads_file(config_dict: dict, tmp_path: pathlib.Path) -> None:
     with path.open() as f:
         browser = load(f)
 
-    assert browser._genome == snapshot("hg38")  # noqa: SLF001
-    assert browser._locus == snapshot("chr8:127,736,588-127,739,371")  # noqa: SLF001
-    assert browser._tracks == snapshot(  # noqa: SLF001
-        [
-            AlignmentTrack(
-                name="HG00103",
-                url="https://s3.amazonaws.com/1000genomes/data/HG00103/alignment/HG00103.alt_bwamem_GRCh38DH.20150718.GBR.low_coverage.cram",
-                index_url="https://s3.amazonaws.com/1000genomes/data/HG00103/alignment/HG00103.alt_bwamem_GRCh38DH.20150718.GBR.low_coverage.cram.crai",
-                format="cram",
-            )
-        ]
+    assert browser.config == snapshot(
+        Config(
+            genome="hg38",
+            locus="chr8:127,736,588-127,739,371",
+            tracks=[
+                AlignmentTrack(
+                    url="https://s3.amazonaws.com/1000genomes/data/HG00103/alignment/HG00103.alt_bwamem_GRCh38DH.20150718.GBR.low_coverage.cram",
+                    name="HG00103",
+                    index_url="https://s3.amazonaws.com/1000genomes/data/HG00103/alignment/HG00103.alt_bwamem_GRCh38DH.20150718.GBR.low_coverage.cram.crai",
+                    format="cram",
+                )
+            ],
+        )
     )
 
 
@@ -265,6 +269,51 @@ def test_basic_config():
                     name="HG02450",
                     index_url="https://1000genomes.s3.amazonaws.com/phase3/data/HG02450/alignment/HG02450.mapped.ILLUMINA.bwa.ACB.low_coverage.20120522.bam.bai",
                     format="bam",
+                ),
+            ],
+        )
+    )
+
+
+def test_simple_api():
+    browser = pygv.browse(
+        "https://example.com/example.vcf",
+        ("https://example.com/example.bam", "https://example.com/example.bam.bai"),
+        pygv.track(
+            "https://example.com/10x_cov.bw", name="10x coverage", autoscale=True
+        ),
+        pygv.track(
+            url="https://s3.amazonaws.com/igv.org.demo/GBM-TP.seg.gz",
+            name="GBM Copy # (TCGA Broad GDAC)",
+            indexed=False,
+            is_log=True,
+            color="blue",
+        ),
+    )
+
+    assert browser.config == snapshot(
+        Config(
+            genome="hg38",
+            tracks=[
+                VariantTrack(
+                    url="https://example.com/example.vcf",
+                    name="https://example.com/example.vcf",
+                ),
+                AlignmentTrack(
+                    url="https://example.com/example.bam",
+                    name="https://example.com/example.bam",
+                    index_url="https://example.com/example.bam.bai",
+                ),
+                WigTrack(
+                    url="https://example.com/10x_cov.bw",
+                    name="10x coverage",
+                    autoscale=True,
+                ),
+                SegmentedCopyNumberTrack(
+                    url="https://s3.amazonaws.com/igv.org.demo/GBM-TP.seg.gz",
+                    name="GBM Copy # (TCGA Broad GDAC)",
+                    indexed=False,
+                    color="blue",
                 ),
             ],
         )

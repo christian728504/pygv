@@ -7,7 +7,7 @@ import typing
 
 from ._browser import Browser
 from ._config import Config, is_href
-from ._tracks import Track
+from ._tracks import BaseTrack, Track
 
 __all__ = ["Browser", "browse", "load", "loads", "locus", "ref", "track"]
 
@@ -40,7 +40,7 @@ def ref(genome: str) -> None:
 
 
 def track(targ: TrackArgument | None = None, /, **kwargs) -> Track:  # noqa: ANN003
-    if isinstance(targ, Track):
+    if isinstance(targ, BaseTrack):
         return targ
 
     if targ is None:

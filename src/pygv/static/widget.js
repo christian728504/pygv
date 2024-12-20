@@ -1,14 +1,20 @@
-import igv from "https://esm.sh/igv@3.1.0";
+import igv from "https://esm.sh/igv@3.1.2";
 
-/** @typedef {{ _genome: string, _tracks: Record<string, unknown>[], _locus: string }} Model */
+/**
+ * @typedef Config
+ * @property {string} genome
+ * @property {(string | Array<string>)=} locus
+ * @property {Array<Record<string, unknown>>} tracks
+ */
+
+/**
+ * @typedef Model
+ * @property {Config} config
+ */
 
 /** @type {import("npm:@anywidget/types").Render<Model>} */
 async function render({ model, el }) {
-  const browser = await igv.createBrowser(el, {
-    genome: model.get("_genome"),
-    locus: model.get("_locus"),
-    tracks: model.get("_tracks"),
-  });
+  const browser = await igv.createBrowser(el, model.get("config"));
   return () => {
     igv.removeBrowser(browser);
   };
