@@ -1,6 +1,7 @@
 import json
 import pathlib
 
+import msgspec
 import pytest
 from inline_snapshot import snapshot
 
@@ -318,3 +319,11 @@ def test_simple_api():
             ],
         )
     )
+
+
+def test_track_auto_height() -> None:
+    # `track()` consumes igv.js-style camelCase kwargs (cf. `indexURL`), so the
+    # `autoHeight` option is recognized and serialized back out as `autoHeight`.
+    track = pygv.track("https://example.com/genes.bed", autoHeight=True)
+    assert track.auto_height is True
+    assert msgspec.to_builtins(track)["autoHeight"] is True

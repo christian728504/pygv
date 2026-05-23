@@ -72,6 +72,12 @@ class BaseTrack(Struct, rename="camel", repr_omit_defaults=True, omit_defaults=T
     max_height: t.Union[int, UnsetType] = UNSET
     """Maximum height of track in pixels. Default 500."""
 
+    auto_height: t.Union[bool, UnsetType] = UNSET
+    """Adjust the track height to fit all features. Overrides `height`.
+
+    Default `False`.
+    """
+
     visibility_window: t.Union[int, str, UnsetType] = UNSET
     """Maximum window size in base pairs for which indexed annotations or
     variants are displayed.
