@@ -254,10 +254,15 @@ class WigTrack(BaseTrack, tag="wig"):
     guide_lines: t.Union[list[GuideLine], UnsetType] = UNSET
     """Draw a horizontal line for each object in the given array."""
 
-    graph_type: t.Union[t.Literal["bar", "points", "heatmap", "line"], UnsetType] = (
-        UNSET
-    )
-    """Type of graph. Default `"bar"`."""
+    graph_type: t.Union[
+        t.Literal["bar", "points", "heatmap", "line", "dynseq"], UnsetType
+    ] = UNSET
+    """Type of graph. Default `"bar"`.
+
+    `"dynseq"` scales nucleotide glyphs by the value at each base, e.g. for
+    visualizing machine-learning model interpretation scores. Requires a bigWig
+    data source.
+    """
 
     flip_axis: t.Union[bool, UnsetType] = UNSET
     """Whether the track is drawn "upside down" with zero at top. Default `False`."""
