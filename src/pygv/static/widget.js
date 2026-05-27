@@ -1,4 +1,4 @@
-import igv from "https://esm.sh/igv@3.8.0";
+import igv from "https://esm.sh/igv@3.7.3";
 
 /**
  * @typedef Config
