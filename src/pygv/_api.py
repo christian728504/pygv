@@ -5,11 +5,13 @@ import json
 import pathlib
 import typing
 
+import msgspec
+
 from ._browser import Browser
-from ._config import Config, is_href
+from ._config import Config, ROISet, is_href
 from ._tracks import BaseTrack, Track
 
-__all__ = ["Browser", "browse", "load", "loads", "locus", "ref", "track"]
+__all__ = ["Browser", "browse", "load", "loads", "locus", "ref", "roi", "track"]
 
 
 @dataclasses.dataclass
@@ -57,23 +59,52 @@ def track(targ: TrackArgument | None = None, /, **kwargs) -> Track:  # noqa: ANN
     return Config.from_dict({"tracks": [kwargs]}).tracks[0]
 
 
-def browse(*tracks: TrackArgument) -> Browser:
+def roi(targ: TrackArgument | None = None, /, **kwargs) -> ROISet:  # noqa: ANN003
+    """Create a region-of-interest (ROI) set from a BED file.
+
+    Mirrors :func:`track`. Accepts a BED file path or URL, a ``(url, indexURL)``
+    tuple, or an existing ROI set. The result is passed to :func:`browse`
+    alongside tracks.
+    """
+    if isinstance(targ, ROISet):
+        return targ
+
+    if targ is None:
+        url = kwargs["url"]
+    elif isinstance(targ, (str, pathlib.Path)):
+        url = kwargs["url"] = str(targ)
+    else:
+        url = kwargs["url"] = str(targ[0])
+        kwargs["indexURL"] = str(targ[1])
+
+    if "name" not in kwargs:
+        kwargs["name"] = url if is_href(url) else pathlib.Path(url).name
+
+    return msgspec.convert(kwargs, type=ROISet)
+
+
+def browse(*args: TrackArgument | ROISet) -> Browser:
     """Create a new genome browser instance.
 
     Parameters
     ----------
-    tracks : tuple[TrackArgument, ...]
-        A list of tracks to display in the browser.
+    args : tuple[TrackArgument | ROISet, ...]
+        Tracks to display in the browser, plus any region-of-interest sets
+        created with :func:`roi`.
 
     Returns
     -------
     Browser
         The browser widget.
     """
+    tracks = [a for a in args if not isinstance(a, ROISet)]
+    rois = [a for a in args if isinstance(a, ROISet)]
     config = Config(
         genome=_CONTEXT.genome,
         tracks=[track(t) for t in tracks],
     )
+    if rois:
+        config.roi = rois
     if _CONTEXT.locus:
         config.locus = _CONTEXT.locus
     _CONTEXT.current = Browser(config)

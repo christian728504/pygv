@@ -4,7 +4,7 @@ import typing as t
 
 import msgspec
 import servir
-from msgspec import UNSET, Struct, UnsetType
+from msgspec import UNSET, Struct, UnsetType, field
 
 from ._tracks import Track
 
@@ -14,6 +14,31 @@ _RESOURCES = set()
 FilePathOrUrl = t.Union[str, pathlib.Path]
 
 
+class ROISet(Struct, rename="camel", repr_omit_defaults=True, omit_defaults=True):
+    """A set of regions of interest (ROIs) shaded across all tracks.
+
+    Backed by an annotation file (e.g. BED). See the [IGV.js docs](https://github.com/igvteam/igv.js/wiki/Regions-of-Interest).
+    """
+
+    url: t.Union[str, UnsetType] = UNSET  # noqa: FA100
+    """URL to the annotation file (e.g. BED) defining the regions."""
+
+    index_url: t.Union[str, UnsetType] = field(default=UNSET, name="indexURL")  # noqa: FA100
+    """URL to a file index, such as a tabix .tbi file, if the resource is indexed."""
+
+    indexed: t.Union[bool, UnsetType] = UNSET  # noqa: FA100
+    """Explicitly indicate whether the resource is indexed."""
+
+    format: t.Union[str, UnsetType] = UNSET  # noqa: FA100
+    """File format. If not specified, inferred from the file name extension."""
+
+    name: t.Union[str, UnsetType] = UNSET  # noqa: FA100
+    """Display name for the ROI set."""
+
+    color: t.Union[str, UnsetType] = UNSET  # noqa: FA100
+    """CSS color value for the region overlay, e.g. `"rgba(94,255,1,0.25)"`."""
+
+
 class Config(Struct, rename="camel", repr_omit_defaults=True, omit_defaults=True):
     """An IGV configuration."""
 
@@ -21,6 +46,7 @@ class Config(Struct, rename="camel", repr_omit_defaults=True, omit_defaults=True
     locus: t.Union[str, list[str], UnsetType] = UNSET  # noqa: FA100
     show_sample_names: t.Union[bool, UnsetType] = UNSET  # noqa: FA100
     tracks: list[Track] = []
+    roi: list[ROISet] = []
 
     @classmethod
     def from_dict(
@@ -47,6 +73,13 @@ class Config(Struct, rename="camel", repr_omit_defaults=True, omit_defaults=True
 
             if track.index_url != msgspec.UNSET:
                 track.index_url = resolve_file_or_url(track.index_url)
+
+        for roi_set in copy.roi:
+            if roi_set.url != msgspec.UNSET:
+                roi_set.url = resolve_file_or_url(roi_set.url)
+
+            if roi_set.index_url != msgspec.UNSET:
+                roi_set.index_url = resolve_file_or_url(roi_set.index_url)
 
         return copy
 

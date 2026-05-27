@@ -327,3 +327,33 @@ def test_track_auto_height() -> None:
     track = pygv.track("https://example.com/genes.bed", autoHeight=True)
     assert track.auto_height is True
     assert msgspec.to_builtins(track)["autoHeight"] is True
+
+
+def test_roi() -> None:
+    # `roi()` mirrors `track()`: a BED url/path becomes an ROI set, routed into
+    # the top-level `roi` config field (separate from `tracks`).
+    browser = pygv.browse(
+        pygv.track("https://example.com/a.bw"),
+        pygv.roi(
+            "https://s3.amazonaws.com/igv.org.test/data/roi/roi_bed_1.bed",
+            color="rgba(94,255,1,0.25)",
+        ),
+    )
+    config = msgspec.to_builtins(browser.config)
+    # As with `track()`, an href input defaults `name` to the full URL.
+    assert config["roi"] == [
+        {
+            "url": "https://s3.amazonaws.com/igv.org.test/data/roi/roi_bed_1.bed",
+            "name": "https://s3.amazonaws.com/igv.org.test/data/roi/roi_bed_1.bed",
+            "color": "rgba(94,255,1,0.25)",
+        }
+    ]
+    # The track argument is unaffected by the ROI routing.
+    assert config["tracks"][0]["url"] == "https://example.com/a.bw"
+
+
+def test_browse_without_roi_omits_field() -> None:
+    # `roi` defaults to an empty list, so `omit_defaults` keeps it out of the
+    # serialized config when no ROIs are supplied.
+    browser = pygv.browse(pygv.track("https://example.com/a.bw"))
+    assert "roi" not in msgspec.to_builtins(browser.config)
